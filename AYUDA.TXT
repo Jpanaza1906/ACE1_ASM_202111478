@@ -1,0 +1,174 @@
+================================================================================
+Archivo de Ayuda - Mi Programa                                                  
+================================================================================
+Bienvenido al archivo de ayuda de Mi Programa. Aqui encontraras informacion util
+para utilizar todas las funciones y caracteristicas de nuestra aplicacion.      
+1. Introduccion                                                                 
+2. Requisitos del Sistema                                                       
+3. Instalacion                                                                  
+4. Inicio Rapido                                                                
+5. Funcionalidades Principales                                                  
+   - Funcion A: Descripcion de la funcion A.                                    
+   - Funcion B: Descripcion de la funcion B.                                    
+   - Funcion C: Descripcion de la funcion C.                                    
+   - Funcion Z: Descripcion de la funcion Z.                                    
+6. Configuracion Avanzada                                                       
+7. Solucion de Problemas Comunes                                                
+8. Preguntas Frecuentes                                                         
+9. Soporte Tecnico                                                              
+10. Informacion de Contacto                                                     
+================================================================================
+1. Introduccion                                                                 
+================================================================================
+                                                                                
+Mi Programa - Connect 4                                                         
+Bienvenido a Mi Programa, donde te presentamos una emocionante implementacion de
+el popular juego de mesa Connect 4 (tambien conocido como Cuatro en Linea).     
+Esta aplicacion te permite disfrutar de horas de diversion estrategica mientras 
+compites con amigos o la inteligencia artificial en el emocionante mundo de     
+Connect 4.                                                                      
+                                                                                
+Que es Connect 4?                                                               
+Connect 4 es un juego de estrategia para dos jugadores que se juega en un       
+tablero vertical de 6 filas y 7 columnas. El objetivo del juego es ser el       
+primero en conectar cuatro fichas del mismo color de forma vertical,            
+horizontal o diagonal en el tablero.                                            
+Los jugadores se turnan para soltar una ficha desde la parte superior en una    
+columna de su eleccion, y la ficha caera hasta el lugar mas bajo disponible en  
+esa columna.                                                                    
+                                                                                
+Caracteristicas Destacadas de Mi Programa - Connect 4                           
+                                                                                
+- Modo Multijugador: Juega contra un amigo en el mismo dispositivo o en         
+linea a traves de la conexion Wi-Fi.                                            
+                                                                                
+- Modo un jugador contra la IA: Desafia a nuestra inteligencia artificial       
+ajustable en tres niveles de dificultad. ?Puedes vencerla en su nivel mas alto? 
+                                                                                
+- Personalizacion: Cambia los colores de las fichas y el tablero segun tus      
+preferencias.                                                                   
+                                                                                
+- Estadisticas y Registro de Partidas: Manten un registro de tus victorias y    
+ derrotas. !Mejora tu estrategia con cada partida!                              
+                                                                                
+- Instrucciones y Ayuda: Esta seccion de ayuda te guiara a traves de las        
+reglas del juego, consejos estrategicos y como aprovechar al maximo la          
+aplicacion.                                                                     
+                                                                                
+Como Usar Esta Guia?                                                            
+                                                                                
+Este archivo de ayuda esta disenado para proporcionarte una vision general del  
+juego Connect 4 y como usar nuestra aplicacion para disfrutarlo al maximo. A    
+continuacion, encontraras instrucciones detalladas sobre como jugar, estrategias
+para ganar y otros consejos utiles para que te conviertas en un maestro de      
+Connect 4.                                                                      
+                                                                                
+Siempre puedes acceder a esta guia desde el menu principal de la aplicacion para
+consultarla en cualquier momento. !Diviertete y que comience la competencia en  
+Connect 4!                                                                      
+                                                                                
+Continua explorando las secciones siguientes para obtener mas detalles sobre    
+como jugar y disfrutar de Connect 4 con Mi Programa.                            
+                                                                                
+                                                                                
+================================================================================
+2. Requisitos del Sistema                                                       
+================================================================================
+                                                                                
+Para que puedas disfrutar de Mi Programa - Connect 4 sin problemas y aprovechar 
+todas sus caracteristicas, asegurate de que tu sistema cumpla con los siguientes
+requisitos minimos:                                                             
+                                                                                
+Requisitos de Hardware:                                                         
+- Sistema operativo: Windows 10 o macOS 11 o posterior.                         
+- Procesador: Un procesador de al menos 2 GHz o equivalente.                    
+- Memoria RAM: Se recomiendan al menos 4 GB de RAM para un rendimiento          
+optimo.                                                                         
+                                                                                
+Requisitos de Pantalla:                                                         
+- Resolucion de pantalla: Se recomienda una resolucion de pantalla de al        
+menos 1280x720 pixeles para una experiencia visual optima.                      
+                                                                                
+Requisitos de Conectividad:                                                     
+- Conexion a Internet: Se requiere una conexion a Internet para el modo         
+multijugador en linea y para acceder a caracteristicas relacionadas con la      
+comunidad (actualizaciones, clasificaciones, etc.).                             
+- Dispositivos de Entrada: Se recomienda el uso de un raton o un teclado        
+para una experiencia de juego mas comoda, aunque tambien se admite el uso       
+de pantallas tactiles en dispositivos compatibles.                              
+                                                                                
+Almacenamiento:                                                                 
+- Espacio libre en disco: Mi Programa - Connect 4 ocupa un espacio de           
+almacenamiento minimo, pero ten en cuenta que guardar partidas y registros de   
+estadisticas ocupara un espacio adicional en tu disco.                          
+                                                                                
+Notas Adicionales:                                                              
+- Asegurate de tener los controladores de graficos y audio actualizados para    
+evitar problemas de rendimiento o incompatibilidad.                             
+- Es posible que la experiencia de juego varie segun la potencia de tu hardware.
+Para un rendimiento optimo, se recomienda un hardware mas potente.              
+                                                                                
+Recuerda que estos son los requisitos minimos para ejecutar la aplicacion. Si tu
+sistema cumple o supera estos requisitos, podras disfrutar de Mi Programa       
+- Connect 4 sin problemas y aprovechar al maximo todas sus caracteristicas.     
+                                                                                
+Si tienes algun problema relacionado con los requisitos del sistema o necesitas 
+ayuda adicional, no dudes en ponerte en contacto con nuestro equipo de soporte  
+tecnico, cuyos datos de contacto puedes encontrar en la seccion de Informacion  
+de Contacto en este archivo de ayuda.                                           
+                                                                                
+================================================================================
+3. Instalacion                                                                  
+================================================================================
+                                                                                
+La instalacion de Mi Programa - Connect 4 es un proceso sencillo y rapido. Sigue
+estos pasos para instalar la aplicacion en tu computadora y comenzar a jugar en 
+cuestion de minutos:                                                            
+                                                                                
+Paso 1: Descarga el Archivo de Instalacion                                      
+1. Visita nuestro sitio web oficial desde tu navegador web.                     
+                                                                                
+2. En la pagina de descarga, encontraras el enlace para descargar el archivo de 
+instalacion de Mi Programa - Connect 4. Haz clic en el enlace para iniciar la   
+descarga.                                                                       
+                                                                                
+Paso 2: Ejecuta el Archivo de Instalacion                                       
+3. Una vez que la descarga se haya completado, busca el archivo de instalacion  
+descargado. Por lo general, se encuentra en la carpeta Descargas de tu          
+computadora.                                                                    
+                                                                                
+4. Haz doble clic en el archivo de instalacion para ejecutarlo. Si estas        
+utilizando Windows, es posible que debas confirmar la ejecucion como            
+administrador.                                                                  
+                                                                                
+5. Aparecera el asistente de instalacion de Mi Programa - Connect 4 en pantalla.
+Sigue las instrucciones en pantalla para continuar con la instalacion.          
+                                                                                
+Paso 3: Configura Opciones de Instalacion (Opcional)                            
+6. Durante el proceso de instalacion, se te dara la opcion de personalizar la   
+instalacion segun tus preferencias. Puedes elegir la ubicacion de instalacion   
+y las opciones de acceso directo.                                               
+                                                                                
+Paso 4: Finaliza la Instalacion                                                 
+7. Una vez que hayas configurado las opciones de instalacion, haz clic en       
+Instalar o Finalizar para completar la instalacion de Mi Programa - Connect     
+4.                                                                              
+                                                                                
+Paso 5: Inicia Mi Programa - Connect 4                                          
+8. Despues de finalizar la instalacion, Mi Programa - Connect 4 estara listo    
+para usar. Puedes iniciar la aplicacion desde el acceso directo en el escritorio
+o desde el menu de inicio de tu sistema operativo.                              
+                                                                                
+Paso 6: Registrate o Inicia Sesion (Opcional)                                   
+9. Al abrir la aplicacion, es posible que se te pida que te registres o inicies 
+sesion si deseas aprovechar caracteristicas adicionales como el modo            
+multijugador en linea.                                                          
+Si prefieres jugar en modo un jugador sin registrarte, tambien puedes hacerlo.  
+                                                                                
+Eso es todo! Ahora estas listo para disfrutar de Mi Programa - Connect 4 y      
+sumergirte en el emocionante mundo de este juego de estrategia.                 
+                                                                                
+Si en algun momento tienes preguntas o experimentas problemas durante el proceso
+de instalacion, no dudes en consultar nuestra seccion de Soporte Tecnico en este
+archivo de ayuda o contactarnos a traves de la informacion de contacto          
+proporcionada en la seccion correspondiente.                                    
