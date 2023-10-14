@@ -75,6 +75,80 @@ operador_calculadora db 00
 maxoperaciones db 00
 cadenamaxima db 0AH, 0DH, "Error: Se ha excedido el numero de operaciones", 0AH, 0DH, "$"
 ;;---------------------------------Fin de Modo Calculadora---------------------------
+
+;;---------------------------------Factorial-------------------------------------------
+
+menu_factorial db 0AH, 0DH, "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%", 0AH, 0DH
+                db "%%%%%%%%%%%%%%%%%%%%%%%%  FACTORIAL  %%%%%%%%%%%%%%%%%%%%%%%%%%", 0AH, 0DH
+                db "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%", 0AH, 0DH, "$"
+
+ingrese_numero_factorial db 0AH, 0DH, "Ingrese un numero: ", 0AH, 0DH, "$"
+ingrese_numero_valido db 0AH, 0DH, "Error: Ingrese un numero valido de 0 a 4", 0AH, 0DH, "$"
+
+operaciones_fac db 0AH, 0DH, "Operaciones: $"
+resultado_fac_cadena db 0AH, 0DH, "El resultado es: $"
+
+
+auxfac db 00
+factorial_n db 00
+resultado_fac db 01
+resultado_ant_fact db 01
+
+
+
+;;---------------------------------Fin de Factorial-----------------------------------
+
+;;============================================== Reporte =======================================================
+
+reporte_html db "<!DOCTYPE html><html><head><meta charset='utf-8'><meta http-equiv='X-UA-Compatible' content='IE=edge'>"
+             db "<title>Reporte</title><meta name='viewport' content='width=device-width, initial-scale=1'>"
+             db "<style>body{display: block;justify-content: center;align-items: center;height: 100vh;margin: 0;}table{border-collapse: collapse;width: 50%;"
+             db "margin-top: 20px;}th,td{border: 1px solid #dddddd;text-align: left;padding: 8px;}th{background-color:         ;}</style></head>"
+             db "<body><center><h1>Practica 4 Arqui 1 Seccion A</h1><h4>Estudiante:Jose David Panaza Batres</h4><h4>Carnet: 202111478</h4>"
+             db "<h4>Fecha: "
+             dia_cadena DB 02 dup (30),'/' 
+             mes_cadena DB 02 dup (30),'/'
+             anho_cadena DB 04 dup (30)
+             db "</h4>"
+             db "<h4>Hora: "
+             hora_cadena DB 02 dup (30),':'
+             minutos_cadena DB 02 dup (30),':'
+             segundos_cadena DB 02 dup (30)
+             db "</h4>"
+             db "</center><table style='display: block;'><thead><tr><th style='text-align: center;' >Id Operacion</th><th>Operacion</th><th>Resultado</th></tr>"
+             db "</thead><tbody>"
+             ;;filas de operaciones
+             inicio_tabla db 0514 dup (00) ;Cada fila son 130 bytes y se coloco capactidad para 10 filas
+             ;;fin filas de operaciones
+             db "</tbody></table></body></html>"
+
+fila_tabla_operacion db "<tr><td>Op"
+                     cadena_id_operacion db 02 dup (30) ;;2 bytes para el id de la operacion
+                     db "</td><td style='text-align:center;'>"
+                     cadena_operacion db 1E dup (00) ;;30 bytes para la operacion inicializados en nulo
+                     db "</td><td style='text-align:center;'>"
+                     cadena_signo_resultado_operacion db 01 dup ('+') ;;1 byte para el signo del resultado de la operacion
+                     cadena_resultado_operacion db 06 dup(30) ;;6 bytes para el resultado de la operacion inicializados en '0'
+                     db "</td></tr>" ;;130 bytes por fila
+
+dia_numero db 00
+mes_numero db 00
+ahno_numero dw 0000
+
+hora_numero db 00
+minutos_numero db 00
+segundos_numero db 00
+
+nombre_reporte db "REP.HTM",00
+handle_reporte dw 0000
+
+offset_tabla dw 0000
+offset_cadena_operacion dw 0000
+
+count_id_operacion db 00
+
+;;============================================== Fin de Reporte ================================================
+
 .CODE
 .STARTUP ;; Inicio del programa
 ;; logica del programa
@@ -541,12 +615,16 @@ IMPRIMIR_OPERACION:
     mov AH, 02h
     mov DL, '-'
     int 21h
+    ;;Poner signo '-' cadena_signo_resultado_operacion
+    mov cadena_signo_resultado_operacion, '-'
     jmp IMPRIMIR_NUM
 IMPRIMIR_MAS:
     ;; imprimos un signo negativo
     mov AH, 02h
     mov DL, '+'
     int 21h
+    ;;Poner signo '+' cadena_signo_resultado_operacion
+    mov cadena_signo_resultado_operacion, '+'
 IMPRIMIR_NUM:
     ;;imprimir resultado de num1
     mov AX, num1
@@ -559,6 +637,16 @@ IMPRIMIR_NUM:
     mov DX, offset cadena_resul
     int 21h
 
+    ;;copiar cadena_resul a cadena_resultado_operacion 
+    mov DI, offset cadena_resultado_operacion
+    mov SI, offset cadena_resul
+    mov CX, 06h
+ COPIAR_RESULTADO:
+    mov AL, [SI]
+    mov [DI], AL
+    inc DI
+    inc SI
+    loop COPIAR_RESULTADO   
     ;;modo calculadora
     cmp modo, 01
     je PREGUNTAR_GUARDAR
@@ -713,6 +801,12 @@ INGRESE_OPERADOR_MENU:
     int 21 ;; interrupcion para leer un caracter
     mov operador_calculadora, AL ;+-*/
     inc maxoperaciones
+    ;;copiar AL a cadena_operaciones
+    mov DI, offset cadena_operacion
+    add DI, offset_cadena_operacion
+    mov [DI], AL
+    inc offset_cadena_operacion
+    ;
     jmp INGRESE_NUMERO_MENU
 INGRESE_OPERADOR_IGUAL_MENU: ;;num1 = 33, tipoingreso = 3
     dec tipo_ingreso ;; tipoingreso = 2
@@ -727,7 +821,12 @@ INGRESE_OPERADOR_IGUAL_MENU: ;;num1 = 33, tipoingreso = 3
     mov operador_calculadora, AL
     cmp AL, '='                         ; 8 + 8 + 
     je RESULTADO_CALCULADORA
-
+    ;;copiar AL a cadena_operaciones
+    mov DI, offset cadena_operacion
+    add DI, offset_cadena_operacion
+    mov [DI], AL
+    inc offset_cadena_operacion
+    ;
     inc maxoperaciones
     cmp maxoperaciones, 0a
     jb INGRESE_NUMERO_MENU
@@ -751,6 +850,22 @@ PEDIR_ENTRADA:
     inc DI ;; Se incrementa la direccion del siguiente byte despues de la cadena
     mov AL, 00 ;; Se coloca el caracter nulo
     mov [DI], AL ;; Se coloca el caracter nulo al final de la cadena
+    ;; Cpiar buffer_entrada a cadena_operacion hasta encontrar nulo
+    ;;
+    mov SI, offset buffer_entrada + 2 ;; Direccion donde comienza la cadena del nombre del archivo
+    mov DI, offset cadena_operacion
+    add DI, offset_cadena_operacion ;;buffer entrada +55  cadena_operacion  +33+55
+    mov CX, 0000
+    mov CL, [SI-1] ;; Se obtiene la longitud de la cadena
+    add offset_cadena_operacion, CX
+LOOP_COPIAR_BUFFER:
+    mov AL, [SI]
+    mov [DI], AL
+    inc SI
+    inc DI
+    loop LOOP_COPIAR_BUFFER
+    ;;
+    ;;
     mov SI, offset buffer_entrada + 2;; Direccion donde comienza la cadena del numero del archivo
     ;; se meten NULO
     mov AX, 0000
@@ -823,20 +938,313 @@ PREGUNTAR_GUARDAR:
     je MENU_PRINCIPAL ;; Si es igual a N, salta a la etiqueta MENU_PRINCIPAL
     jmp PREGUNTAR_GUARDAR ;; Si no es igual a ninguno de los anteriores, salta a la etiqueta RESULTADO_CALCULADORA
 GUARDAR_RESULTADO:
+    ;;Incrementar count_id_operacion
+    inc count_id_operacion
+    ;;converti count_id_operacion a string
+    mov AH, 00
+    mov AL, count_id_operacion
+    call numAstr
+    ;;copiar los utimos 2 caracteres de cadena_resul a cadena_resultado_operacion
+    mov DI, offset cadena_id_operacion
+    mov SI, offset cadena_resul ;;000000
+    mov AL, [SI+4]
+    mov [DI], AL
+    inc DI
+    inc SI
+    mov AL, [SI+4]
+    mov [DI], AL
+    ;;copiar fila_tabla_operacion a inicio_tabla
+    mov DI, offset fila_tabla_operacion
+    mov SI, offset inicio_tabla
+    add SI, offset_tabla
+    mov CX, 0083
+    add offset_tabla, CX
+COPIAR_FILA:
+    mov AL, [DI]
+    mov [SI], AL
+    inc DI
+    inc SI
+    loop COPIAR_FILA
+    ;;reiniciar offset de la cadena de la operacion
+    mov offset_cadena_operacion, 0000
+    ;;limpiar cadena_operacion
+    mov DI, offset cadena_operacion
+    mov CX, 001E
+LIMPIAR_CADENA_OPERACION:
+    mov AL, 00
+    mov [DI], AL
+    inc Di
+    loop LIMPIAR_CADENA_OPERACION
     jmp MENU_PRINCIPAL
 
-
-
-
-
-
-infinito:
-    jmp infinito
+;;============================================== MODO FACTORIAL =======================================================
+ERROR_FACTORIAL:
+    ;;se muestra el mensaje de error
+    mov AH, 09 ;; Funcion para mostrar cadena de caracteres
+    mov DX, offset ingrese_numero_valido ;; Direccion de memoria de la cadena de caracteres
+    int 21 ;; interrupcion para mostrar cadena de caracteres
     jmp MENU_PRINCIPAL
 FACTORIAL:
-    jmp SALIR
+    ;;se reinician las variables
+    mov auxfac, 00
+    mov resultado_fac, 01
+    mov resultado_ant_fact, 01
+    mov factorial_n, 00
+    ;;imprimir menu factorial
+    mov AH, 09 ;; Funcion para mostrar cadena de caracteres
+    mov DX, offset menu_factorial ;; Direccion de memoria de la cadena de caracteres
+    int 21 ;; interrupcion para mostrar cadena de caracteres
+
+    ;;se muestra el mensaje para ingresar numero
+    mov AH, 09 ;; Funcion para mostrar cadena de caracteres
+    mov DX, offset ingrese_numero_factorial ;; Direccion de memoria de la cadena de caracteres
+    int 21 ;; interrupcion para mostrar cadena de caracteres
+
+    ;;se pide un numero
+    mov AH, 01 ;; Funcion para leer un caracter
+    int 21 ;; interrupcion para leer un caracter
+
+    ;;LO guarda en AL
+    call ascii_a_num
+    ;;--> AL -> num binario
+    ;;si factorial es mayor a 4, se muestra error
+    cmp AL, 04
+    jg ERROR_FACTORIAL
+    cmp AL , 00
+    jl ERROR_FACTORIAL
+
+
+    mov factorial_n, AL
+
+    ;;se muestra el mensaje para las operaciones
+    mov AH, 09 ;; Funcion para mostrar cadena de caracteres
+    mov DX, offset operaciones_fac;; Direccion de memoria de la cadena de caracteres
+    int 21 ;; interrupcion para mostrar cadena de caracteres
+
+CICLO_FACTORIAL:
+    ;;se imprime auxfac
+    mov AH, 00
+    mov AL, auxfac
+
+    call numAstr
+    call IMPRIMIR_SIN_CEROS_CADENA_NUMASTR
+
+    ;;se imprime el signo !
+    mov AH, 02h
+    mov DL, '!'
+    int 21h
+
+    ;;se imprime el signo =
+    mov AH, 02h
+    mov DL, '='
+    int 21h
+
+    ;;se imprimme "resultado_ant_fact * auxfac =" si auxfac es mayor a 0
+    cmp auxfac, 00
+    je SEGUIR_FACTORIAL
+
+    ;se imprime : resultado_ant_fact * auxfac =
+    mov AH, 00
+    mov AL, resultado_ant_fact
+    call numAstr
+    call IMPRIMIR_SIN_CEROS_CADENA_NUMASTR
+
+    ;;se imprime el signo *
+    mov AH, 02h
+    mov DL, '*'
+    int 21h
+
+    ;se imprime : auxfac
+    mov AH, 00
+    mov AL, auxfac
+    call numAstr
+    call IMPRIMIR_SIN_CEROS_CADENA_NUMASTR
+
+    ;;se imprime el signo =
+    mov AH, 02h
+    mov DL, '='
+    int 21h
+
+SEGUIR_FACTORIAL:
+
+    ;;se imprime el resultado
+    mov AH, 00
+    mov AL, resultado_fac
+
+    call numAstr
+    call IMPRIMIR_SIN_CEROS_CADENA_NUMASTR
+
+    ;;se imprime pto y coma
+    mov AH, 02h
+    mov DL, ';'
+    int 21h
+
+    ;;se imprime un espacio 
+    mov AH, 02h
+    mov DL, ' '
+    int 21h
+
+    mov AL, auxfac
+    cmp factorial_n, AL
+    je RESULTADO_FACTORIAL
+    inc auxfac
+    ;calcular nuevo resultado. resultado = resultado * auxfac
+    mov AH, 00
+    mov AL, resultado_fac
+    mov resultado_ant_fact, AL
+    mul auxfac
+    mov resultado_fac, AL
+    jmp CICLO_FACTORIAL
+
+RESULTADO_FACTORIAL:
+    ;;se imprime resultado
+    mov AH, 09
+    mov DX, offset resultado_fac_cadena
+    int 21
+
+    ;;se convierte a string
+    mov AH, 00
+    mov AL, resultado_fac
+
+    call numAstr
+    call IMPRIMIR_SIN_CEROS_CADENA_NUMASTR
+
+    jmp MENU_PRINCIPAL
+
+IMPRIMIR_SIN_CEROS_CADENA_NUMASTR:
+    mov CX, 0005
+    mov BX, offset cadena_resul
+QUITAR_CERO:
+    mov AL, [BX]
+    cmp AL, '0'
+    je SEGUIR_LOOP
+    ;;si no es cero, se imprime cadena_resul y carga a CX = 1 para que no imprima mas
+    mov AH, 09h
+    mov DX, BX
+    int 21h
+    jmp FIN  
+SEGUIR_LOOP:
+    inc BX
+    loop QUITAR_CERO
+    ;;si CX es cero, imprime el ultimo caracter de cadena_result
+    cmp CX, 0000
+    jne FIN 
+    ;;es cero
+    mov BX, offset cadena_resul + 5
+    mov AH, 02h 
+    mov DL, [BX]
+    int 21h
+FIN: 
+    ret
+
 CREAR_REPORTE:
-    jmp SALIR
+    ;;obtener Fecha
+    mov AH, 2Ah
+    int 21h
+    mov dia_numero, DL
+    mov mes_numero, DH
+    mov ahno_numero, CX
+    ;;converti dia a cadena
+    mov AH, 00
+    mov AL, dia_numero
+    call numAstr ;;Salida Cadena Resultado
+    ;;Copiar solo los ultimos 2 caracteres de cadena_result a dia_cadena
+    mov SI, offset cadena_resul + 4
+    mov DI, offset dia_cadena
+    mov AL, [SI]
+    mov [DI], AL
+    inc SI
+    inc DI
+    mov AL, [SI]
+    mov [DI], AL
+    ;;convertir mes a cadena
+    mov AH, 00
+    mov AL, mes_numero
+    call numAstr ;;Salida Cadena Resultado
+    ;;Copiar solo los ultimos 2 caracteres de cadena_result a mes_cadena
+    mov SI, offset cadena_resul + 4
+    mov DI, offset mes_cadena
+    mov AL, [SI]
+    mov [DI], AL
+    inc SI
+    inc DI
+    mov AL, [SI]
+    mov [DI], AL
+    ;;convertir año a cadena
+    mov AX, ahno_numero
+    call numAstr ;;Salida Cadena Resultado
+    ;;Copiar solo los ultimos 4 caracteres de cadena_result a ahno_cadena
+    mov SI, offset cadena_resul + 2 ;;000000
+    mov DI, offset anho_cadena
+    mov CX, 0004
+COPIAR_AHNO:
+    mov AL, [SI]
+    mov [DI], AL
+    inc SI
+    inc DI
+    loop COPIAR_AHNO
+    ;;Obtener hora
+    mov AH, 2Ch
+    int 21h
+    mov hora_numero, CH
+    mov minutos_numero, CL
+    mov segundos_numero, DH
+    ;;convertir hora a cadena
+    mov AH, 00
+    mov AL, hora_numero
+    call numAstr ;;Salida Cadena Resultado
+    ;;Copiar solo los ultimos 2 caracteres de cadena_result a hora_cadena
+    mov SI, offset cadena_resul + 4
+    mov DI, offset hora_cadena
+    mov AL, [SI]
+    mov [DI], AL
+    inc SI
+    inc DI
+    mov AL, [SI]
+    mov [DI], AL
+    ;;convertir minutos a cadena
+    mov AH, 00
+    mov AL, minutos_numero
+    call numAstr
+    ;;Copiar solo los ultimos 2 caracteres de cadena_result a minutos_cadena
+    mov SI, offset cadena_resul + 4
+    mov DI, offset minutos_cadena
+    mov AL, [SI]
+    mov [DI], AL
+    inc SI
+    inc DI
+    mov AL, [SI]
+    mov [DI], AL
+    ;;convertir segundos a cadena
+    mov AH, 00
+    mov AL, segundos_numero
+    call numAstr
+    ;;Copiar solo los ultimos 2 caracteres de cadena_result a segundos_cadena
+    mov SI, offset cadena_resul + 4
+    mov DI, offset segundos_cadena
+    mov AL, [SI]
+    mov [DI], AL
+    inc SI
+    inc DI
+    mov AL, [SI]
+    mov [DI], AL
+    ;Crear archivo para reporte
+    mov AH, 3ch
+    mov CX, 0000
+    mov DX, offset nombre_reporte
+    int 21h
+    mov handle_reporte, AX
+    ;Escribir en Reporte
+    mov AH, 40h
+    mov BX, handle_reporte
+    mov CX, 0842h ;; bytes de todo el reporte
+    mov DX, offset reporte_html
+    int 21h
+    ;Cerrar archivo
+    mov AH, 3eh
+    mov BX, handle_reporte
+    int 21h
+    jmp MENU_PRINCIPAL
 SALIR:
 .EXIT
 END
