@@ -1,0 +1,9 @@
+	MOV SI, 00f8h
+e2:	
+	DEC SI
+	JZ e3
+	MOV DI, 01f4h
+e1:		DEC DI
+		JNZ e1
+		JMP e2
+e3:
