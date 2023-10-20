@@ -1,4 +1,5 @@
 ;;----------------------------------------- CONSTANTES -----------------------------------------
+;;-------------------------------------------JUEGO-------------------------------------------
 JUGADOR_CARRIL	equ 01
 JUGADOR_ACERA	equ 02
 ACERA			equ 03
@@ -9,6 +10,18 @@ L_CARROVERDE	equ 07
 L_CARROAMARILLO	equ 08
 CAMIONINI		equ 09
 CAMIONFIN		equ 10
+;;-----------------------------------------FIN JUEGO-----------------------------------------
+;;-------------------------------------------USUARIOS-------------------------------------------
+USUARIO_NORMAL			equ 02
+USUARIO_ADMIN 			equ 01
+USUARIO_ADMIN_ORIGINAL	equ 00
+
+SIZE_NAME	 			equ 20
+SIZE_PASSWORD 			equ 25
+NO_BLOQUEADO			equ 00
+BLOQUEADO				equ 01
+;;-----------------------------------------FIN USUARIOS-----------------------------------------
+
 ;;---------------------------------------FIN CONSTANTES---------------------------------------
 .MODEL small
 .RADIX 16 ;;HEXADECIMAL
@@ -31,7 +44,7 @@ punteo_actual dw 0000h
 
 ;;---------------------------------------- FOOTER TABLERO-----------------------------------------
 
-usuario_actual db 14 dup(" "), '$'
+
 
 dia_cadena db 02 dup (30),'/' 
 mes_cadena db 02 dup (30),'/'
@@ -125,7 +138,6 @@ sprite_carro_verde_izq      db 13, 00, 00, 13, 13, 00, 00, 13
 							db 02, 09, 02, 02, 02, 09, 09, 02
 							db 02, 02, 02, 02, 02, 02, 02, 02
 							db 13, 00, 00, 13, 13, 00, 00, 13
-;;hacer un mirrow del sprite carro rojo izquierda
 sprite_carro_amarillo_izq   db 13, 00, 00, 13, 13, 00, 00, 13
 							db 06, 06, 06, 06, 06, 06, 06, 06
 							db 06, 09, 06, 06, 06, 09, 09, 06
@@ -165,9 +177,70 @@ columna_jugador db 00h
 
 gameover_cadena db "GAME  OVER$"
 
+tiempo_base_velocidad_lenta db 00h
+tiempo_base_velocidad_media db 00h
+tiempo_base_velocidad_rapida db 00h
 
+tiempo_base_velocidad_lenta_aux db 00h
+tiempo_base_velocidad_media_aux db 00h
+tiempo_base_velocidad_rapida_aux db 00h
+
+tiempo_actual db 00h
+bandera_tiempo	db 00h
 
 ;;---------------------------------------FIN TABLERO---------------------------------------
+
+;;----------------------------------------USUARIOS----------------------------------------
+usuarios_archivo db "USRS.ACE", 00
+cadena_login_titulo db "============LOGIN============$"
+cadena_usuariologin db "USUARIO: $"
+cadena_passwordlogin db "PASSWORD: $"
+cadena_error_apertura db "ERROR AL ABRIR EL ARCHIVO$"
+cadena_error_lectura db "ERROR AL LEER EL ARCHIVO$"
+cadena_error_login db "USUARIO O PASSWORD INCORRECTOS$"
+
+buffer_entrada_usuario 	db 32, 00
+						db 32 dup(00)
+buffer_entrada_password db 32, 00
+						db 32 dup(00)
+
+usuario_actual db 14 dup(00), '$'
+
+
+usuario_leido db 14 dup(00)
+password_usuario db 19 dup(00)
+rol_usuario db 00 ;; 0 -> admin original | 1 -> admin | 2 -> usuario
+estado_usuario db 00 ;; 0 -> no bloqueado | 1 -> bloqueado
+handle_usuarios dw 0000h
+cont_login db 00h
+
+cadenaarchivo	db "jose"
+				db 10 dup(00)
+				db "123"
+				db 16 dup(00)
+cadena_logincorrecto db "LOGIN CORRECTO$"
+;Colaborador1
+;jbatres
+;202111478A*
+;Colaborador2
+;smejia
+;202103226A*
+;;--------------------------------------FIN LOGIN--------------------------------------
+
+;;---------------------------------------INICIO MENU ADMIN ORIGINAL---------------------------------------
+cadena_menu_admin_original db "=======MENU ADMIN ORIGINAL=======",0ah,0ah
+cadena_menu_admin_original_opcion1 db 0ah, 0ah, "	F1	REGISTRAR USUARIO",0ah,0ah
+cadena_menu_admin_original_opcion2 db "	F2	PROMOVER USUARIO",0ah,0ah
+cadena_menu_admin_original_opcion3 db "	F3	DESBLOQUEAR USUARIO",0ah,0ah
+cadena_menu_admin_original_opcion4 db "	F4	ORDENAR PUNTAJES",0ah,0ah
+cadena_menu_admin_original_opcion5 db "	F5	VER ESTADISTICAS",0ah,0ah
+cadena_menu_admin_original_opcion6 db "	F6	JUGAR",0ah,0ah
+cadena_menu_admin_original_opcion7 db "	F7	ULTIMAS PARTIDAS",0ah,0ah
+cadena_menu_admin_original_opcion8 db "	F8	CERRAR SESION$"
+
+
+;;--------------------------------------- MENU PRINCIPAL---------------------------------------
+
 .CODE
 .STARTUP 
 ;;===========================================INICIO_INSTRUCCIONES===========================================
@@ -177,8 +250,244 @@ gameover_cadena db "GAME  OVER$"
     mov AL, 13h
     mov AH, 00h 
     int 10h
+	jmp LOGIN
 ;;---------------------------------------FIN MODO DE VIDEO---------------------------------------
+
+;;ecribir en archivo
+	mov CX, 0000
+	mov DX, offset usuarios_archivo
+	mov AH, 3ch
+	int 21h
+	mov handle_usuarios, AX
+	;;;escribir en archivo
+	mov BX, handle_usuarios
+	mov CX, 2dh
+	mov DX, offset cadenaarchivo
+	mov AH, 40h
+	int 21h
+	;cerrar archivo
+	mov BX, handle_usuarios
+	mov AH, 3eh
+	int 21h
+
+;;------------------------------------------INICIO LOGIN ----------------------------------------------
+ERROR_APERTURA:
+	mov AH, 02h
+	mov BH, 00h
+	mov DH, 18h
+	mov DL, 00h
+	int 10h
+
+	mov DX, offset cadena_error_apertura
+	mov AH, 09h
+	int 21h
+	;;esperar a presionar una tecla
+	mov AH, 01h
+	int 21h
+
+	jmp LOGIN
+ERROR_LECTURA:
+	mov AH, 02h
+	mov BH, 00h
+	mov DH, 18h
+	mov DL, 00h
+	int 10h
+	mov DX, offset cadena_error_lectura
+	mov AH, 09h
+	int 21h
+	;;esperar a presionar una tecla
+	mov AH, 01h
+	int 21h
+
+	jmp LOGIN
+ERROR_LOGIN:
+	mov AH, 02h
+	mov BH, 00h
+	mov DH, 18h
+	mov DL, 00h
+	int 10h
+	mov DX, offset cadena_error_login
+	mov AH, 09h
+	int 21h
+
+	;;esperar a presionar una tecla
+	mov AH, 01h
+	int 21h
+
+	jmp LOGIN
+LOGIN:
+	call limpiar_pantalla
+	;;colocar cursor en la posicion fila, col -> 04h, 06h
+	mov AH, 02h
+	mov BH, 00h
+	mov DH, 04h
+	mov DL, 05h
+	int 10h
+
+	;;imprimir cadena_login_titulo
+	mov DX, offset cadena_login_titulo
+	mov AH, 09h
+	int 21h
+
+;;------------------------------------USUARIO------------------------------------
+
+	;;colocar cursor en la posicion fila, col -> 08h, 06h
+	mov AH, 02h
+	mov BH, 00h
+	mov DH, 08h
+	mov DL, 06h
+	int 10h
+
+	;;imprimir cadena_usuariologin
+	mov DX, offset cadena_usuariologin
+	mov AH, 09h
+	int 21h
+
+	;;pedir nombre de usuario
+	mov AH, 0ah
+	mov DX, offset buffer_entrada_usuario
+	int 21h
+
+	mov AL, [buffer_entrada_usuario+1]
+	mov AH, 00
+	mov SI, AX
+	mov DI, offset buffer_entrada_usuario+2
+	add DI, SI
+	mov AL, 00
+	mov [DI], AL
+
+;;------------------------------------PASSWORD------------------------------------
+
+	;;colocar cursor en la posicion fila, col -> 0ah, 06h
+	mov AH, 02h
+	mov BH, 00h
+	mov DH, 0ah
+	mov DL, 06h
+	int 10h
+
+	;;imprimir cadena_passwordlogin
+	mov DX, offset cadena_passwordlogin
+	mov AH, 09h
+	int 21h
+
+	;;pedir password
+	mov AH, 0ah
+	mov DX, offset buffer_entrada_password
+	int 21h
+
+	mov AL, [buffer_entrada_password+1]
+	mov AH, 00
+	mov SI, AX
+	mov DI, offset buffer_entrada_password+2
+	add DI, SI
+	mov AL, 00
+	mov [DI], AL
+
+;;------------------------------------VERIFICAR CREDENCIALES------------------------------------
+
+	;;abrir archivo de usuarios
+	mov AH, 3dh
+	mov AL, 00h
+	mov DX, offset usuarios_archivo
+	int 21h
+	;;error de apertura
+	jc ERROR_APERTURA
+	mov handle_usuarios, AX
+LEER_USUARIO:
+	;;leer usuario
+	mov AH, 3fh
+	mov BX, handle_usuarios
+	mov CX, 2fh ;;se lee toda la estructura
+	mov DX, offset usuario_leido
+	int 21h
+	;;error de lectura
+	jc ERROR_LECTURA
+	
+	cmp AX, 00h
+	je ERROR_LOGIN
+
+	;;comparar usuario
+	mov SI, offset usuario_leido
+	mov DI, offset [buffer_entrada_usuario + 2] ;; inicio cadena
+	mov CX, 2dh ;;tamaño de la cadena 45 decimal = 2dh
+	mov cont_login, 00h
+CICLO_LEER_USUARIO:
+	mov AL, [SI]
+	cmp AL, [DI]
+	; jose010101010101010101010101010101010101001123
+	; jose0101010101010101 -> 20 espacios
+	jne LEER_USUARIO
+	cmp cont_login, 13h
+	jne SEGUIR_LEYENDO
+	mov DI, offset [buffer_entrada_password + 1] ;; inicio cadena
+SEGUIR_LEYENDO:
+	inc SI
+	inc DI
+	inc cont_login
+	loop CICLO_LEER_USUARIO
+;;Si termina usuario correcto
+;;imprimir caracter 'a'
+	mov AH, 02h
+	mov BH, 00h
+	mov DH, 18h
+	mov DL, 00h
+	int 10h
+	mov DX, offset cadena_logincorrecto
+	mov AH, 09h
+	int 21h
+
+	;;esperar a presionar una tecla
+	mov AH, 01h
+	int 21h
+
+	;;se compara el rol del usuario
+	cmp rol_usuario, USUARIO_ADMIN_ORIGINAL
+	je MENU_ADMIN_ORIGINAL
+	cmp rol_usuario, USUARIO_ADMIN
+	;je MENU_ADMIN
+	cmp rol_usuario, USUARIO_NORMAL
+	;je MENU_NORMAL
+
+	jmp LOGIN
+;;------------------------------------------FIN LOGIN ----------------------------------------------
+
+;;------------------------------------------INICIO MENU ADMIN ORIGINAL ----------------------------------------------
+
+MENU_ADMIN_ORIGINAL:
+	call limpiar_pantalla
+	;;Mostrar encabezado
+	mov AH, 02h
+	mov BH, 00h
+	mov DH, 01h
+	mov DL, 04h
+	int 10h
+	mov DX, offset cadena_menu_admin_original
+	mov AH, 09h
+	int 21h
+
+	;;Se leen las Fs
+	
+
+
+finito:
+	jmp finito
+
+
+
+
+
+;;--------------------------------------------FIN MENU ADMIN ORIGINAL ----------------------------------------------
+
+;;-----------------------------------------INICIO TABLERO-----------------------------------------
 CREAR_TABLERO_JUEGO:
+	;;Guardar Centencimas Base
+	mov AH, 2ch
+	int 21
+	;DL -> centecimas
+	mov tiempo_base_velocidad_lenta, DL
+	mov tiempo_base_velocidad_media, DL
+	mov tiempo_base_velocidad_rapida, DL
+
 	;;se limpia la pantalla
 	call limpiar_pantalla
 ;;----------------------------------------- DATOS HEADER -----------------------------------------
@@ -259,7 +568,33 @@ GAME_OVER:
 
 ;; ==============================================  SUBRUTINAS  ==============================================
 
-;; ---------------------------------------------- VERIFICAR SUMAR 
+;; Delay Sin Parar El Programa
+;; Entrada : DL -> Tiempo Base
+;			 DH -> Tiempo de Espera
+;			 DI -> direccion del tiempo base
+;; Salida : bandera_tiempo = 0 -> no Paso Tiempo de Espera(DH) | 1 -> Paso Tiempo de Espera(DH)
+DELAY:
+	push DX
+	mov AH, 2ch
+	int 21h
+	mov tiempo_actual, DL
+	mov CL, DL ;;Copia Tiempo Actual
+	pop DX
+	cmp tiempo_actual, DL
+	jae RESTA
+	add tiempo_actual, 64
+RESTA:
+	sub tiempo_actual, DL
+	cmp tiempo_actual, DH
+	jae SI_PASO
+	mov bandera_tiempo, 00h
+	mov [DI], DL
+	jmp FINAL_DELAY
+SI_PASO:
+	mov bandera_tiempo, 01h
+	mov [DI], CL
+FINAL_DELAY:
+	ret
 
 ;; ---------------------------------------------- MOVER JUGADOR ----------------------------------------------
 ;; 
@@ -439,15 +774,61 @@ ciclo_col_mov_vehiculos:
 	jmp CONTINUE_COL_MOV_VEHICULOS
 
 MOV_DERECHA_OBJ:
+	push AX
+	push CX
+	push DX
+	push DI
+	;
+	mov DL, tiempo_base_velocidad_media
+	mov DH, 1Eh
+	mov DI, offset tiempo_base_velocidad_media_aux
+	call DELAY
+	;
+	pop DI
+	pop DX
+	pop CX
+	pop AX
+	cmp bandera_tiempo, 00h
+	je siguiente_fila_mov_vehiculos
 	call MOVER_DERECHA_OBJETO
-	call MOVER_DERECHA_OBJETO
+	;call MOVER_DERECHA_OBJETO
 	jmp siguiente_fila_mov_vehiculos
 MOV_IZQUIERDA_OBJ:
-	call MOVER_IZQUIERDA_OBJETO
-	call MOVER_IZQUIERDA_OBJETO
+	push AX
+	push CX
+	push DX
+	push DI
+	;
+	mov DL, tiempo_base_velocidad_rapida
+	mov DH, 0ah
+	mov DI, offset tiempo_base_velocidad_rapida_aux
+	call DELAY
+	;
+	pop DI
+	pop DX
+	pop CX
+	pop AX
+	cmp bandera_tiempo, 00h
+	je siguiente_fila_mov_vehiculos
 	call MOVER_IZQUIERDA_OBJETO
 	jmp siguiente_fila_mov_vehiculos
 MOV_DERECHA_CAMION:
+	push AX
+	push CX
+	push DX
+	push DI
+	;
+	mov DL, tiempo_base_velocidad_lenta
+	mov DH, 5Ah
+	mov DI, offset tiempo_base_velocidad_lenta_aux
+	call DELAY
+	;
+	pop DI
+	pop DX
+	pop CX
+	pop AX
+	cmp bandera_tiempo, 00h
+	je siguiente_fila_mov_vehiculos
 	call MOVER_DERECHA_CAMION
 	jmp siguiente_fila_mov_vehiculos
 CONTINUE_COL_MOV_VEHICULOS:
@@ -460,6 +841,14 @@ siguiente_fila_mov_vehiculos:
 	jmp ciclo_fila_mov_vehiculos
 
 retorno_mov_vehiculos:
+	push AX
+	mov AL, tiempo_base_velocidad_lenta_aux
+	mov tiempo_base_velocidad_lenta, AL
+	mov AL, tiempo_base_velocidad_media_aux
+	mov tiempo_base_velocidad_media, AL
+	mov AL, tiempo_base_velocidad_rapida_aux
+	mov tiempo_base_velocidad_rapida, AL
+	pop AX
 	ret
 
 ;;----------------------------------------------MOVER DERECHA OBJETO----------------------------------------------
@@ -1265,11 +1654,11 @@ imprimir_gameover:
 	mov contsegundo, 00h
 	mov semilla_random, 01h
 
-	MOV SI, 1D4Ch
+	MOV SI, 2710h
 e2:	
 	DEC SI
 	JZ e3
-	MOV DI, 3e8h
+	MOV DI, 222Eh
 e1:		
 	DEC DI
 	JNZ e1
