@@ -193,6 +193,7 @@ bandera_tiempo	db 00h
 ;;----------------------------------------USUARIOS----------------------------------------
 usuarios_archivo db "USRS.ACE", 00
 cadena_login_titulo db "============LOGIN============$"
+cadena_registro_titulo db "============REGISTRO============$"
 cadena_usuariologin db "USUARIO: $"
 cadena_passwordlogin db "PASSWORD: $"
 cadena_error_apertura db "ERROR AL ABRIR EL ARCHIVO$"
@@ -214,31 +215,40 @@ estado_usuario db 00 ;; 0 -> no bloqueado | 1 -> bloqueado
 handle_usuarios dw 0000h
 cont_login db 00h
 
-cadenaarchivo	db "jose"
-				db 10 dup(00)
-				db "123"
-				db 16 dup(00)
+cadenaarchivo	db "smejia"
+				db 0E dup(00)
+				db "202103216A*"
+				db 0E dup(00)
+				db 00, 00
+				
 cadena_logincorrecto db "LOGIN CORRECTO$"
 ;Colaborador1
 ;jbatres
 ;202111478A*
 ;Colaborador2
 ;smejia
-;202103226A*
+;202103216A*
 ;;--------------------------------------FIN LOGIN--------------------------------------
 
-;;---------------------------------------INICIO MENU ADMIN ORIGINAL---------------------------------------
-cadena_menu_admin_original db "=======MENU ADMIN ORIGINAL=======",0ah,0ah
-cadena_menu_admin_original_opcion1 db 0ah, 0ah, "	F1	REGISTRAR USUARIO",0ah,0ah
-cadena_menu_admin_original_opcion2 db "	F2	PROMOVER USUARIO",0ah,0ah
-cadena_menu_admin_original_opcion3 db "	F3	DESBLOQUEAR USUARIO",0ah,0ah
-cadena_menu_admin_original_opcion4 db "	F4	ORDENAR PUNTAJES",0ah,0ah
-cadena_menu_admin_original_opcion5 db "	F5	VER ESTADISTICAS",0ah,0ah
-cadena_menu_admin_original_opcion6 db "	F6	JUGAR",0ah,0ah
-cadena_menu_admin_original_opcion7 db "	F7	ULTIMAS PARTIDAS",0ah,0ah
-cadena_menu_admin_original_opcion8 db "	F8	CERRAR SESION$"
+;;---------------------------------------INICIO MENU ADMIN ORIGINAL----------------------------
+cadena_usuario_base				db "===============MENU==============",0ah,0ah
+								db "	F1	NUEVA PARTIDA",0ah,0ah
+								db "	F2	ULTIMAS PARTIDAS",0ah,0ah
+								db "	F3	CERRAR SESION",0ah,0ah,"$"
+cadena_usuario_admin			db "	F4	ESTADISTICAS",0ah,0ah
+								db "	F5	ORDENAMIENTO",0ah,0ah
+								db "	F6	DESBLOQUEAR USUARIO",0ah,0ah,"$"
+cadena_usuario_admin_original	db "	F7	PROMOVER O DEGRADAR$",0ah,0ah,"$"
 
+cadena_pantalla_inicial			db "===========PANTALLA INICIAL=============",0ah,0ah
+								db 0ah,0ah,"	F1	LOGIN",0ah,0ah
+								db "	F2	REGISTRO",0ah,0ah
+								db "	ESC  	SALIR$"
 
+;;MENU PAUSE OPT 1 -> CONTINUAR, OPT 2 -> SALIR
+cadena_menu_pause				db "================PAUSE================",0ah,0ah
+								db "	F1	CONTINUAR",0ah,0ah
+								db "	F2	SALIR",0ah,0ah,"$"
 ;;--------------------------------------- MENU PRINCIPAL---------------------------------------
 
 .CODE
@@ -250,7 +260,8 @@ cadena_menu_admin_original_opcion8 db "	F8	CERRAR SESION$"
     mov AL, 13h
     mov AH, 00h 
     int 10h
-	jmp LOGIN
+	;;jmp CREAR_TABLERO_JUEGO
+	jmp PANTALLA_INICIAL
 ;;---------------------------------------FIN MODO DE VIDEO---------------------------------------
 
 ;;ecribir en archivo
@@ -261,7 +272,7 @@ cadena_menu_admin_original_opcion8 db "	F8	CERRAR SESION$"
 	mov handle_usuarios, AX
 	;;;escribir en archivo
 	mov BX, handle_usuarios
-	mov CX, 2dh
+	mov CX, 2fh
 	mov DX, offset cadenaarchivo
 	mov AH, 40h
 	int 21h
@@ -271,6 +282,20 @@ cadena_menu_admin_original_opcion8 db "	F8	CERRAR SESION$"
 	int 21h
 
 ;;------------------------------------------INICIO LOGIN ----------------------------------------------
+ERROR_APERTURA_REGISTRO:
+	mov AH, 02h
+	mov BH, 00h
+	mov DH, 18h
+	mov DL, 00h
+	int 10h
+	mov DX, offset cadena_error_apertura
+	mov AH, 09h
+	int 21h
+	;;esperar a presionar una tecla
+	mov AH, 01h
+	int 21h
+
+	jmp PANTALLA_INICIAL
 ERROR_APERTURA:
 	mov AH, 02h
 	mov BH, 00h
@@ -285,7 +310,7 @@ ERROR_APERTURA:
 	mov AH, 01h
 	int 21h
 
-	jmp LOGIN
+	jmp PANTALLA_INICIAL
 ERROR_LECTURA:
 	mov AH, 02h
 	mov BH, 00h
@@ -299,7 +324,7 @@ ERROR_LECTURA:
 	mov AH, 01h
 	int 21h
 
-	jmp LOGIN
+	jmp PANTALLA_INICIAL
 ERROR_LOGIN:
 	mov AH, 02h
 	mov BH, 00h
@@ -314,9 +339,192 @@ ERROR_LOGIN:
 	mov AH, 01h
 	int 21h
 
-	jmp LOGIN
+;;--------------------------------------PANTALLA INICIAL--------------------------------------------------
+
+PANTALLA_INICIAL:
+	call limpiar_pantalla
+
+	mov AH, 02h
+	mov BH, 00h
+	mov DH, 02h
+	mov DL, 00h
+	int 10h
+
+	;;imprimir cadena_pantalla_inicial
+	mov DX, offset cadena_pantalla_inicial
+	mov AH, 09h
+	int 21h
+
+	;;esperar a presionar una tecla
+	mov AH, 00h
+	int 16h
+
+	;;se compara la tecla presionada
+	cmp AH, 3bh
+	je LOGIN
+	cmp AH, 3ch
+	je REGISTRO
+	cmp AH, 01
+	je FINAL_PROGRAMA
+
+	jmp PANTALLA_INICIAL
+
+
+;;--------------------------------------REGISTRO--------------------------------------------------
+REGISTRO:
+	call limpiar_pantalla
+
+	;;limpiar buffer usuario
+	mov BX, offset buffer_entrada_usuario
+	call limpiar_buffer
+
+	;;limpiar buffer password
+	mov BX, offset buffer_entrada_password
+	call limpiar_buffer
+
+	;;colocar cursor en la posicion fila, col -> 04h, 06h
+	mov AH, 02h
+	mov BH, 00h
+	mov DH, 04h
+	mov DL, 05h
+	int 10h
+
+	;;imprimir cadena_registro_titulo
+	mov DX, offset cadena_registro_titulo
+	mov AH, 09h
+	int 21h
+
+;;------------------------------------USUARIO------------------------------------
+	;;colocar cursor en la posicion fila, col -> 08h, 06h
+	mov AH, 02h
+	mov BH, 00h
+	mov DH, 08h
+	mov DL, 06h
+	int 10h
+
+	;;imprimir cadena_usuariologin
+	mov DX, offset cadena_usuariologin
+	mov AH, 09h
+	int 21h
+
+	;;pedir nombre de usuario
+	mov AH, 0ah
+	mov DX, offset buffer_entrada_usuario
+	int 21h
+
+	mov AL, [buffer_entrada_usuario+1]
+	mov AH, 00
+	mov SI, AX
+	mov DI, offset buffer_entrada_usuario+2
+	add DI, SI
+	mov AL, 00
+	mov [DI], AL
+
+;;------------------------------------PASSWORD------------------------------------
+
+	;;colocar cursor en la posicion fila, col -> 0ah, 06h
+	mov AH, 02h
+	mov BH, 00h
+	mov DH, 0ah
+	mov DL, 06h
+	int 10h
+
+	;;imprimir cadena_passwordlogin
+	mov DX, offset cadena_passwordlogin
+	mov AH, 09h
+	int 21h
+
+	;;pedir password
+	mov AH, 0ah
+	mov DX, offset buffer_entrada_password
+	int 21h
+
+	mov AL, [buffer_entrada_password+1]
+	mov AH, 00
+	mov SI, AX
+	mov DI, offset buffer_entrada_password+2
+	add DI, SI
+	mov AL, 00
+	mov [DI], AL
+
+	;;---------------------------------- VERFICAR CADENA QUE CUMPLA CON REGLAS ----------------------------------
+
+	;;usuario -> [a-z][a-z0-9._-]{8,20}
+	;;contraseña -> [a-zA-Z*_.-@+?]+{15,25}
+
+	;;verificacion usuario
+	;;verificacion contraseña
+
+
+	;;meter datos en el archivo
+	mov AH, 3dh
+	mov AL, 02h
+	mov DX, offset usuarios_archivo
+	int 21h
+
+	;;error de apertura
+	jc ERROR_APERTURA_REGISTRO
+	mov handle_usuarios, AX
+
+	;;mover el puntero al final
+	mov AL, 02h
+	mov AH, 42h
+	mov BX, handle_usuarios
+	mov CX, 0000h
+	mov DX, 0000h
+	int 21h
+
+	jc ERROR_APERTURA_REGISTRO
+
+	;;escribir en el archivo
+	mov AH, 40h
+	mov BX, handle_usuarios
+	mov CX, 14h
+	mov DX, offset buffer_entrada_usuario + 2
+	int 21h
+
+	mov AH, 40h
+	mov BX, handle_usuarios
+	mov CX, 19h
+	mov DX, offset buffer_entrada_password + 2
+	int 21h
+
+	mov rol_usuario, 02h
+	mov estado_usuario, 00h
+	
+	mov AH, 40h
+	mov BX, handle_usuarios
+	mov CX, 01h
+	mov DX, offset rol_usuario
+	int 21h
+
+	mov AH, 40h
+	mov BX, handle_usuarios
+	mov CX, 01h
+	mov DX, offset estado_usuario
+	int 21h
+
+	;;cerrar archivo
+	mov BX, handle_usuarios
+	mov AH, 3eh
+	int 21h
+
+
+	jmp PANTALLA_INICIAL
+
+;; --------------------------------------- LOGIN ----------------------------------------------
+
 LOGIN:
 	call limpiar_pantalla
+
+	;;limpiar buffer usuario
+	mov BX, offset buffer_entrada_usuario
+	call limpiar_buffer
+
+	;;limpiar buffer password
+	mov BX, offset buffer_entrada_password
+	call limpiar_buffer
+
 	;;colocar cursor en la posicion fila, col -> 04h, 06h
 	mov AH, 02h
 	mov BH, 00h
@@ -414,8 +622,7 @@ LEER_USUARIO:
 CICLO_LEER_USUARIO:
 	mov AL, [SI]
 	cmp AL, [DI]
-	; jose010101010101010101010101010101010101001123
-	; jose0101010101010101 -> 20 espacios
+	;
 	jne LEER_USUARIO
 	cmp cont_login, 13h
 	jne SEGUIR_LEYENDO
@@ -425,8 +632,7 @@ SEGUIR_LEYENDO:
 	inc DI
 	inc cont_login
 	loop CICLO_LEER_USUARIO
-;;Si termina usuario correcto
-;;imprimir caracter 'a'
+;;Usuario Encontrado. Se posiciona el cursos y se imprime "Login Correcto"
 	mov AH, 02h
 	mov BH, 00h
 	mov DH, 18h
@@ -448,35 +654,73 @@ SEGUIR_LEYENDO:
 	cmp rol_usuario, USUARIO_NORMAL
 	;je MENU_NORMAL
 
-	jmp LOGIN
+	jmp MENU
 ;;------------------------------------------FIN LOGIN ----------------------------------------------
 
 ;;------------------------------------------INICIO MENU ADMIN ORIGINAL ----------------------------------------------
 
-MENU_ADMIN_ORIGINAL:
+MENU:
 	call limpiar_pantalla
-	;;Mostrar encabezado
+	;;Mostrar encabezado SIEMPRE
 	mov AH, 02h
 	mov BH, 00h
 	mov DH, 01h
 	mov DL, 04h
 	int 10h
-	mov DX, offset cadena_menu_admin_original
+	mov DX, offset cadena_usuario_base
 	mov AH, 09h
 	int 21h
 
-	;;Se leen las Fs
+	;;admin orginal
+	cmp rol_usuario, USUARIO_ADMIN_ORIGINAL
+	je MENU_ADMIN_ORIGINAL
+	;;admin
+	cmp rol_usuario, USUARIO_ADMIN
+	je MENU_ADMIN_NORMAL
+	;;normal
+	jmp SIGUE_MENU
+
+MENU_ADMIN_ORIGINAL:
+	mov DX, offset cadena_usuario_admin
+	mov AH, 09h
+	int 21h
+	mov DX, offset cadena_usuario_admin_original
+	mov AH, 09h
+	int 21h
+	jmp SIGUE_MENU
+MENU_ADMIN_NORMAL:
+	mov DX, offset cadena_usuario_admin	
+	mov AH, 09h
+	int 21h
+SIGUE_MENU:
+	;;se lee la tecla presionada
+	mov AH, 00h
+	int 16h
+
+	;;se compara la tecla presionada
+	cmp AH, 3bh
+	je CREAR_TABLERO_JUEGO
+	cmp AH, 3ch
+	;;je ULTIMAS_PARTIDAS
+	cmp AH, 3dh
+	je PANTALLA_INICIAL
+	cmp AH, 3eh
+	;;je ESTADISTICAS
+	cmp AH, 3fh
+	;;je ORDENAMIENTO
+	cmp AH, 40h
+	;;je DESBLOQUEAR_USUARIO
+	cmp AH, 41h
+	;;je PROMOVER_DEGRADAR
+
+
 	
-
-
+	;Se leen las FS
 finito:
 	jmp finito
-
-
-
-
-
 ;;--------------------------------------------FIN MENU ADMIN ORIGINAL ----------------------------------------------
+
+
 
 ;;-----------------------------------------INICIO TABLERO-----------------------------------------
 CREAR_TABLERO_JUEGO:
@@ -662,6 +906,8 @@ SIG:
 	je MOVER_DERECHA
 	cmp AH, 4bh
 	je MOVER_IZQUIERDA
+	cmp AH, 01h
+	je PAUSA_JUEGO
 	jmp NO_TECLA
 MOVER_ARRIBA:
 	cmp fila_jugador, 02h
@@ -719,6 +965,31 @@ MOVER_IZQUIERDA:
 	jmp PERDER_CHOQUE
 SIGUE_NORMAL_IZQUIERDA:
 	jmp NO_TECLA
+PAUSA_JUEGO:
+	call limpiar_pantalla
+ciclo_pausa:
+	;;posicionar cursor
+	mov AH, 02h
+	mov BH, 00h
+	mov DH, 01h
+	mov DL, 00h
+	int 10h
+	;;imprimir cadena_menu_pause
+	mov DX, offset cadena_menu_pause
+	mov AH, 09h
+	int 21h
+
+	;;se lee la tecla presionada
+	mov AH, 00h
+	int 16h
+
+	;;se compara la tecla presionada
+	cmp AH, 3bh
+	je NO_TECLA
+	cmp AH, 3ch
+	je MENU
+	jmp ciclo_pausa
+
 PERDER_CHOQUE:
 	dec vidas
 	mov fila_jugador, 17h
@@ -1529,7 +1800,20 @@ imprimir_usuario_footer:
 	mov AH, 02
 	int 10h
 
-	mov DX, offset usuario_actual
+	;;buffer usuario
+	mov BX, offset buffer_entrada_usuario
+	mov CL, [BX + 1]
+	mov CH, 00
+	;;
+	add BX, 02h
+	;;
+	add BX, CX
+	;;
+	mov AL, '$'
+	mov [BX], AL
+
+
+	mov DX, offset buffer_entrada_usuario + 2
 	mov AH, 09
 	int 21
 	ret
@@ -1665,8 +1949,23 @@ e1:
 	JMP e2
 e3:
 	ret
+
+;-------------------------------------------LIMPIAR BUFFERS-------------------------------------------
+;;SI -> Offset buffer
+
+limpiar_buffer:
+	mov CH, 00
+	mov CL, [BX]
+	add BX, 02h
+
+ciclo_limpiar_buffer:
+	mov AL, 00h
+	mov [BX], AL
+	inc BX
+	loop ciclo_limpiar_buffer
+	ret
 FINAL_PROGRAMA:
-jmp FINAL_PROGRAMA
+	call limpiar_pantalla
 ;;---------------------------------------FIN_INSTRUCCIONES---------------------------------------
 .EXIT
 END  
